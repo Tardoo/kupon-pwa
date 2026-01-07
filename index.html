@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futbol Kupon Oyunu</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f2027">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #0f2027;
+    color: #fff;
+    margin: 0;
+    padding: 15px;
+}
+
+.container {
+    max-width: 420px;
+    margin: auto;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.match {
+    background: #1c1c1c;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+.match button {
+    margin-top: 6px;
+    margin-right: 5px;
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    background: #1abc9c;
+    cursor: pointer;
+}
+
+.coupon {
+    background: #ffffff;
+    color: #000;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+}
+
+.total {
+    font-weight: bold;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>⚽ Futbol Kuponu</h1>
+
+    <select id="leagueSelect" onchange="loadMatches()">
+        <option value="">Lig Seç</option>
+        <option value="superlig">Süper Lig</option>
+        <option value="laliga">La Liga</option>
+        <option value="premier">Premier League</option>
+    </select>
+
+    <div id="matches"></div>
+
+    <div class="coupon">
+        <h3>🧾 Kupon</h3>
+        <ul id="betList"></ul>
+        <div class="total">Toplam Oran: <span id="totalOdd">1.00</span></div>
+    </div>
+</div>
+
+<script>
+const leagues = {
+    superlig: [
+        { match: "Galatasaray - Fenerbahçe", odds: [1.80, 3.20, 2.10] },
+        { match: "Beşiktaş - Trabzonspor", odds: [1.90, 3.10, 2.00] }
+    ],
+    laliga: [
+        { match: "Real Madrid - Barcelona", odds: [1.90, 3.50, 2.00] }
+    ],
+    premier: [
+        { match: "Man City - Arsenal", odds: [1.60, 3.80, 2.40] }
+    ]
+};
+
+let totalOdd = 1;
+
+function loadMatches() {
+    const league = document.getElementById("leagueSelect").value;
+    const matchDiv = document.getElementById("matches");
+    matchDiv.innerHTML = "";
+
+    if (!league) return;
+
+    leagues[league].forEach(m => {
+        matchDiv.innerHTML += `
+        <div class="match">
+            <strong>${m.match}</strong><br>
+            <button onclick="addBet('${m.match} - 1', ${m.odds[0]})">1 (${m.odds[0]})</button>
+            <button onclick="addBet('${m.match} - X', ${m.odds[1]})">X (${m.odds[1]})</button>
+            <button onclick="addBet('${m.match} - 2', ${m.odds[2]})">2 (${m.odds[2]})</button>
+        </div>`;
+    });
+}
+
+function addBet(name, odd) {
+    const li = document.createElement("li");
+    li.textContent = `${name} (${odd})`;
+    document.getElementById("betList").appendChild(li);
+    totalOdd *= odd;
+    document.getElementById("totalOdd").innerText = totalOdd.toFixed(2);
+}
+
+// SERVICE WORKER
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+}
+</script>
+
+</body>
+</html>
