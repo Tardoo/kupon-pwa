@@ -132,6 +132,13 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
 }
 </script>
+<h2 style="text-align:center">🎯 Mini Plinko</h2>
+
+<div id="plinko">
+  <canvas id="plinkoCanvas" width="320" height="420"></canvas>
+  <button onclick="dropBall()">Topu Bırak</button>
+  <p>Puan: <span id="score">0</span></p>
+</div>
 
 </body>
 </html>
