@@ -1,251 +1,94 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Futbol Kupon Oyunu</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Futbol Kupon Oyunu</title>
 
-<!-- PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0f2027">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b1d2a">
 
-<style>
-body {
-    font-family: Arial, sans-serif;
-    background: #0f2027;
-    color: #fff;
-    margin: 0;
-    padding: 15px;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 15px;
+    }
 
-.container {
-    max-width: 420px;
-    margin: auto;
-}
+    h2 {
+      text-align: center;
+    }
 
-select {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
 
-.match {
-    background: #1c1c1c;
-    padding: 12px;
-    margin-bottom: 10px;
-    border-radius: 10px;
-}
+    #zeppelin {
+      background: #0b1d2a;
+      color: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+    }
 
-.match button {
-    margin-top: 6px;
-    margin-right: 5px;
-    padding: 8px;
-    border: none;
-    border-radius: 6px;
-    background: #1abc9c;
-    cursor: pointer;
-}
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
 
-.coupon {
-    background: #ffffff;
-    color: #000;
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 15px;
-}
-
-.total {
-    font-weight: bold;
-    font-size: 18px;
-}
-    <style>
-#plinko {
-  text-align: center;
-  margin: 20px auto;
-}
-
-#plinko button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  background: #1e88e5;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 16px;
-}
-
-canvas {
-  background: #0b1d2a;
-  border-radius: 12px;
-}
-</style>
-
-</style>
+    .start { background: #2ecc71; }
+    .cashout { background: #e67e22; }
+  </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h1>⚽ Futbol Kuponu</h1>
+<h2>⚽ Futbol Kupon Oyunu</h2>
 
-    <select id="leagueSelect" onchange="loadMatches()">
-        <option value="">Lig Seç</option>
-        <option value="superlig">Süper Lig</option>
-        <option value="laliga">La Liga</option>
-        <option value="premier">Premier League</option>
-    </select>
+<div class="card">
+  <p><strong>Oyun Parası:</strong> <span id="coin">1000</span> COIN</p>
+  <p>Kupon Kazancı: <span id="couponWin">0</span> COIN</p>
+  <button onclick="finishCoupon()">Kuponu Bitir (+100 COIN)</button>
+</div>
 
-    <div id="matches"></div>
+<h2>🎈 Zeplin Mini Oyunu</h2>
 
-    <div class="coupon">
-        <h3>🧾 Kupon</h3>
-        <ul id="betList"></ul>
-        <div class="total">Toplam Oran: <span id="totalOdd">1.00</span></div>
-    </div>
+<div id="zeppelin">
+  <p>Bahis (COIN)</p>
+  <input type="number" id="bet" value="50" min="10"><br><br>
+
+  <button class="start" onclick="startGame()">Başlat</button>
+  <button class="cashout" onclick="cashOut()">Çek</button>
+
+  <h3>Çarpan: <span id="multiplier">1.00x</span></h3>
+  <p id="status">Hazır</p>
 </div>
 
 <script>
-const leagues = {
-    superlig: [
-        { match: "Galatasaray - Fenerbahçe", odds: [1.80, 3.20, 2.10] },
-        { match: "Beşiktaş - Trabzonspor", odds: [1.90, 3.10, 2.00] }
-    ],
-    laliga: [
-        { match: "Real Madrid - Barcelona", odds: [1.90, 3.50, 2.00] }
-    ],
-    premier: [
-        { match: "Man City - Arsenal", odds: [1.60, 3.80, 2.40] }
-    ]
-};
+/* ===== COIN SİSTEMİ ===== */
+let coin = Number(localStorage.getItem("coin")) || 1000;
+let couponWin = 0;
 
-let totalOdd = 1;
-
-function loadMatches() {
-    const league = document.getElementById("leagueSelect").value;
-    const matchDiv = document.getElementById("matches");
-    matchDiv.innerHTML = "";
-
-    if (!league) return;
-
-    leagues[league].forEach(m => {
-        matchDiv.innerHTML += `
-        <div class="match">
-            <strong>${m.match}</strong><br>
-            <button onclick="addBet('${m.match} - 1', ${m.odds[0]})">1 (${m.odds[0]})</button>
-            <button onclick="addBet('${m.match} - X', ${m.odds[1]})">X (${m.odds[1]})</button>
-            <button onclick="addBet('${m.match} - 2', ${m.odds[2]})">2 (${m.odds[2]})</button>
-        </div>`;
-    });
+function updateCoin() {
+  document.getElementById("coin").innerText = coin;
+  localStorage.setItem("coin", coin);
 }
 
-function addBet(name, odd) {
-    const li = document.createElement("li");
-    li.textContent = `${name} (${odd})`;
-    document.getElementById("betList").appendChild(li);
-    totalOdd *= odd;
-    document.getElementById("totalOdd").innerText = totalOdd.toFixed(2);
+/* ===== KUPON ===== */
+function finishCoupon() {
+  couponWin = 100;
+  coin += couponWin;
+  document.getElementById("couponWin").innerText = couponWin;
+  updateCoin();
 }
 
-// SERVICE WORKER
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
-}
-</script>
-<h2 style="text-align:center">🎯 Mini Plinko</h2>
-
-<div id="plinko">
-  <canvas id="plinkoCanvas" width="320" height="420"></canvas>
-  <button onclick="dropBall()">Topu Bırak</button>
-  <p>Puan: <span id="score">0</span></p>
-</div>
-<script>
-const canvas = document.getElementById("plinkoCanvas");
-const ctx = canvas.getContext("2d");
-
-let ball = null;
-let score = 0;
-
-// Pimler
-const pegs = [];
-for (let y = 80; y <= 260; y += 40) {
-  for (let x = 40; x <= 280; x += 40) {
-    pegs.push({ x, y });
-  }
-}
-
-// Çarpanlar
-const slots = [
-  { x: 0, value: 0 },
-  { x: 80, value: 1 },
-  { x: 160, value: 2 },
-  { x: 240, value: 5 }
-];
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Pimleri çiz
-  ctx.fillStyle = "#fff";
-  pegs.forEach(p => {
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
-    ctx.fill();
-  });
-
-  // Slotlar
-  slots.forEach(s => {
-    ctx.fillStyle = "#2ecc71";
-    ctx.fillRect(s.x, 380, 80, 40);
-    ctx.fillStyle = "#000";
-    ctx.fillText(s.value + "x", s.x + 30, 405);
-  });
-
-  // Top
-  if (ball) {
-    ctx.beginPath();
-    ctx.arc(ball.x, ball.y, 6, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffeb3b";
-    ctx.fill();
-
-    ball.y += 3;
-    ball.x += ball.vx;
-
-    // Rastgele sekme
-    pegs.forEach(p => {
-      const dx = ball.x - p.x;
-      const dy = ball.y - p.y;
-      if (Math.sqrt(dx * dx + dy * dy) < 8) {
-        ball.vx = (Math.random() - 0.5) * 4;
-      }
-    });
-
-    // Alt kısım
-    if (ball.y > 380) {
-      const slot = Math.floor(ball.x / 80);
-      const win = slots[slot]?.value || 0;
-      score += win * 10;
-      document.getElementById("score").innerText = score;
-      ball = null;
-    }
-  }
-
-  requestAnimationFrame(draw);
-}
-
-function dropBall() {
-  if (ball) return;
-  ball = {
-    x: 160,
-    y: 20,
-    vx: (Math.random() - 0.5) * 2
-  };
-}
-
-draw();
-</script>
-
-</body>
-</html>
+/* ===== ZEP LİN (CRASH) ===== *
