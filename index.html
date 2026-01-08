@@ -1,60 +1,63 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Futbol Kupon Oyunu</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kupon & Zeplin Oyunu</title>
 
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0b1d2a">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1d2a">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      padding: 15px;
-    }
-
-    h2 {
-      text-align: center;
-    }
-
-    .card {
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    #zeppelin {
-      background: #0b1d2a;
-      color: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      text-align: center;
-    }
-
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .start { background: #2ecc71; }
-    .cashout { background: #e67e22; }
-    #crashCanvas {
-  background: #0b1d2a;
-  border-radius: 8px;
-  display: block;
-  margin: 10px auto;
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 15px;
 }
 
-  </style>
+h2 { text-align: center; }
+
+.card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+select, input {
+  width: 100%;
+  padding: 8px;
+  margin: 6px 0;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.play { background:#2ecc71; color:#fff; }
+.start { background:#3498db; color:#fff; }
+.cashout { background:#e67e22; color:#fff; }
+
+#zeppelin {
+  background:#0b1d2a;
+  color:#fff;
+  border-radius:12px;
+  padding:15px;
+  text-align:center;
+}
+
+#crashCanvas {
+  background:#081621;
+  border-radius:8px;
+  margin:10px auto;
+  display:block;
+}
+</style>
 </head>
 
 <body>
@@ -62,15 +65,25 @@
 <h2>⚽ Futbol Kupon Oyunu</h2>
 
 <div class="card">
-  <p><strong>Oyun Parası:</strong> <span id="coin">1000</span> COIN</p>
-  <p>Kupon Kazancı: <span id="couponWin">0</span> COIN</p>
-  <button onclick="finishCoupon()">Kuponu Bitir (+100 COIN)</button>
+  <p><strong>COIN:</strong> <span id="coin">1000</span></p>
+
+  <label>Maç Seç</label>
+  <select id="match">
+    <option value="1.80">FB – GS (1.80)</option>
+    <option value="2.10">BJK – TS (2.10)</option>
+    <option value="1.60">RM – BAR (1.60)</option>
+  </select>
+
+  <label>Bahis (COIN)</label>
+  <input type="number" id="couponBet" value="100" min="10">
+
+  <button class="play" onclick="playCoupon()">Kupon Oyna</button>
+  <p id="couponResult"></p>
 </div>
 
-<h2>🎈 Zeplin Mini Oyunu</h2>
+<h2>🎈 Zeplin (Crash) Oyunu</h2>
 
-<div id="zeppelin" class="card">
-  <p>Bahis (COIN)</p>
+<div id="zeppelin">
   <input type="number" id="bet" value="50" min="10">
 
   <canvas id="crashCanvas" width="300" height="200"></canvas>
@@ -89,9 +102,9 @@
 <audio id="crashSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
 
 <script>
-/* ===== COIN SİSTEMİ ===== */
+/* ===== COIN ===== */
 let coin = Number(localStorage.getItem("coin")) || 1000;
-let couponWin = 0;
+document.getElementById("coin").innerText = coin;
 
 function updateCoin() {
   document.getElementById("coin").innerText = coin;
@@ -99,19 +112,31 @@ function updateCoin() {
 }
 
 /* ===== KUPON ===== */
-function finishCoupon() {
-  couponWin = 100;
-  coin += couponWin;
-  document.getElementById("couponWin").innerText = couponWin;
+function playCoupon() {
+  const odd = Number(document.getElementById("match").value);
+  const bet = Number(document.getElementById("couponBet").value);
+
+  if (bet > coin) return alert("Yetersiz COIN");
+
+  coin -= bet;
+  const win = Math.random() < 0.5;
+
+  if (win) {
+    const gain = Math.floor(bet * odd);
+    coin += gain;
+    document.getElementById("couponResult").innerText =
+      "✅ Kupon kazandı! +" + gain + " COIN";
+  } else {
+    document.getElementById("couponResult").innerText =
+      "❌ Kupon kaybetti";
+  }
+
   updateCoin();
 }
 
 /* ===== ZEP LİN (CRASH) ===== */
 const canvas = document.getElementById("crashCanvas");
 const ctx = canvas.getContext("2d");
-
-let coin = Number(localStorage.getItem("coin")) || 1000;
-document.getElementById("coin").innerText = coin;
 
 let multiplier = 1;
 let crashPoint = 0;
@@ -122,54 +147,36 @@ let interval = null;
 let x = 20;
 let y = canvas.height - 20;
 
-// Sesler
 const startSound = document.getElementById("startSound");
 const cashSound = document.getElementById("cashSound");
 const crashSound = document.getElementById("crashSound");
 
-function updateCoin() {
-  document.getElementById("coin").innerText = coin;
-  localStorage.setItem("coin", coin);
-}
-
-function drawGraph() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // çizgi
+function draw() {
+  ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.strokeStyle = "#2ecc71";
-  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(20, canvas.height - 20);
+  ctx.moveTo(20, canvas.height-20);
   ctx.lineTo(x, y);
   ctx.stroke();
-
-  // zeplin
-  ctx.font = "20px Arial";
-  ctx.fillText("🎈", x - 10, y - 10);
+  ctx.font="20px Arial";
+  ctx.fillText("🎈", x-10, y-10);
 }
 
 function startGame() {
   if (playing) return;
 
   betAmount = Number(document.getElementById("bet").value);
-  if (betAmount > coin) {
-    alert("Yetersiz COIN");
-    return;
-  }
+  if (betAmount > coin) return alert("Yetersiz COIN");
 
   startSound.play();
-
   coin -= betAmount;
   updateCoin();
 
   multiplier = 1;
-  crashPoint = Math.random() * 4 + 1.5;
+  crashPoint = Math.random()*4 + 1.5;
   playing = true;
-
   x = 20;
   y = canvas.height - 20;
-
-  document.getElementById("status").innerText = "Zeplin yükseliyor 🎈";
 
   interval = setInterval(() => {
     multiplier += 0.02;
@@ -177,19 +184,16 @@ function startGame() {
     y -= 1.5;
 
     document.getElementById("multiplier").innerText =
-      multiplier.toFixed(2) + "x";
+      multiplier.toFixed(2)+"x";
 
-    drawGraph();
+    draw();
 
-    if (multiplier >= crashPoint || y <= 20) {
-      crash();
-    }
-  }, 100);
+    if (multiplier >= crashPoint || y <= 20) crash();
+  },100);
 }
 
 function cashOut() {
   if (!playing) return;
-
   clearInterval(interval);
   cashSound.play();
 
@@ -199,28 +203,21 @@ function cashOut() {
 
   document.getElementById("status").innerText =
     "🎉 Kazandın +" + win + " COIN";
-
   playing = false;
 }
 
 function crash() {
   clearInterval(interval);
   crashSound.play();
-
-  ctx.font = "30px Arial";
-  ctx.fillText("💥", x - 15, y - 10);
-
-  document.getElementById("status").innerText =
-    "💥 Zeplin patladı!";
-
+  ctx.font="30px Arial";
+  ctx.fillText("💥", x-15, y-10);
+  document.getElementById("status").innerText = "💥 Zeplin patladı";
   playing = false;
 }
 
-updateCoin();
-
-/* ===== SERVICE WORKER ===== */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+/* ===== PWA ===== */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 </script>
 
