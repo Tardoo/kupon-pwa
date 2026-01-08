@@ -161,6 +161,91 @@ if ("serviceWorker" in navigator) {
   <button onclick="dropBall()">Topu Bırak</button>
   <p>Puan: <span id="score">0</span></p>
 </div>
+<script>
+const canvas = document.getElementById("plinkoCanvas");
+const ctx = canvas.getContext("2d");
+
+let ball = null;
+let score = 0;
+
+// Pimler
+const pegs = [];
+for (let y = 80; y <= 260; y += 40) {
+  for (let x = 40; x <= 280; x += 40) {
+    pegs.push({ x, y });
+  }
+}
+
+// Çarpanlar
+const slots = [
+  { x: 0, value: 0 },
+  { x: 80, value: 1 },
+  { x: 160, value: 2 },
+  { x: 240, value: 5 }
+];
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Pimleri çiz
+  ctx.fillStyle = "#fff";
+  pegs.forEach(p => {
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  // Slotlar
+  slots.forEach(s => {
+    ctx.fillStyle = "#2ecc71";
+    ctx.fillRect(s.x, 380, 80, 40);
+    ctx.fillStyle = "#000";
+    ctx.fillText(s.value + "x", s.x + 30, 405);
+  });
+
+  // Top
+  if (ball) {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffeb3b";
+    ctx.fill();
+
+    ball.y += 3;
+    ball.x += ball.vx;
+
+    // Rastgele sekme
+    pegs.forEach(p => {
+      const dx = ball.x - p.x;
+      const dy = ball.y - p.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 8) {
+        ball.vx = (Math.random() - 0.5) * 4;
+      }
+    });
+
+    // Alt kısım
+    if (ball.y > 380) {
+      const slot = Math.floor(ball.x / 80);
+      const win = slots[slot]?.value || 0;
+      score += win * 10;
+      document.getElementById("score").innerText = score;
+      ball = null;
+    }
+  }
+
+  requestAnimationFrame(draw);
+}
+
+function dropBall() {
+  if (ball) return;
+  ball = {
+    x: 160,
+    y: 20,
+    vx: (Math.random() - 0.5) * 2
+  };
+}
+
+draw();
+</script>
 
 </body>
 </html>
