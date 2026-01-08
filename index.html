@@ -47,6 +47,13 @@
 
     .start { background: #2ecc71; }
     .cashout { background: #e67e22; }
+    #crashCanvas {
+  background: #0b1d2a;
+  border-radius: 8px;
+  display: block;
+  margin: 10px auto;
+}
+
   </style>
 </head>
 
@@ -62,16 +69,24 @@
 
 <h2>🎈 Zeplin Mini Oyunu</h2>
 
-<div id="zeppelin">
+<div id="zeppelin" class="card">
   <p>Bahis (COIN)</p>
-  <input type="number" id="bet" value="50" min="10"><br><br>
+  <input type="number" id="bet" value="50" min="10">
+
+  <canvas id="crashCanvas" width="300" height="200"></canvas>
+
+  <h3><span id="multiplier">1.00x</span></h3>
 
   <button class="start" onclick="startGame()">Başlat</button>
   <button class="cashout" onclick="cashOut()">Çek</button>
 
-  <h3>Çarpan: <span id="multiplier">1.00x</span></h3>
   <p id="status">Hazır</p>
 </div>
+
+<!-- SESLER -->
+<audio id="startSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+<audio id="cashSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+<audio id="crashSound" src="https://actions.google.com/sounds/v1/explosions/explosion.ogg"></audio>
 
 <script>
 /* ===== COIN SİSTEMİ ===== */
