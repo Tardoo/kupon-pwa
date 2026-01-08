@@ -1,10 +1,10 @@
 {
   "name": "Futbol Kupon Oyunu",
-  "short_name": "Kupon",
+  "short_name": "Kupon Oyunu",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#0f2027",
-  "theme_color": "#0f2027",
+  "background_color": "#ffffff",
+  "theme_color": "#0b1d2a",
   "icons": [
     {
       "src": "icon-192.png",
